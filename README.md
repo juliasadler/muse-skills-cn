@@ -1,4 +1,4 @@
-# Muse 中文 Skill 包：35 个生活场景技巧 + 10 个开箱即用的 Skill
+# Muse 中文 Skill 包：38 个生活场景技巧 + 11 个开箱即用的 Skill
 
 > 内容形式参考 [jasonbitsmith/muse-skills](https://github.com/jasonbitsmith/muse-skills)（一句话痛点 + 三步做法），技巧全部原创，对应本仓库真实可用的 Skill。
 
@@ -72,7 +72,13 @@
 34. **推完不放心** → ① 自动回读远端 tree ② 逐文件比对清单 ③ 对不上直接报错
 35. **文本文件推送乱码** → ① 别用野路子传 base64 ② 走正规 blob 接口（`content` + `encoding: base64`） ③ Python 内做编解码，文件保持原文 UTF-8
 
-## 📦 Skill 包（10 个）
+### 💰 AI 福利（羊毛） · [ai-freebies](skills/ai-freebies/)
+
+36. **想白嫖 AI 额度不知道从哪下手** → ① 看 ai-freebies 的福利清单 ② 按"每天刷新 / 限时 / 新用户"三类找适合自己的 ③ 先把每天刷新的配通长期用
+37. **免费额度总过期浪费** → ① 按有效期排序，短的先薅 ② 新用户限期的别提前注册（注册即开始计时） ③ 到期前一周提醒自己用完
+38. **社媒看到的福利怕是假的** → ① 先按官方口径逐一核实 ② 对不上/找不到出处的标"存疑"不行动 ③ 已下线的进"避免白跑"区，不浪费时间
+
+## 📦 Skill 包（11 个）
 
 | Skill | 说明 | 工具 |
 |---|---|---|
@@ -86,6 +92,7 @@
 | [moments-display](skills/moments-display/) | 朋友圈展示面：配文 7 法则、选图 9 规则、运营原则 | — |
 | [email-triage](skills/email-triage/) | 邮箱分拣与定期清理：提醒/噪音/清理三类规则 | — |
 | [video-transcript](skills/video-transcript/) | 视频/音频转带说话人区分的逐字稿 | `scripts/diarize_transcribe.py` |
+| [ai-freebies](skills/ai-freebies/) | AI 福利（羊毛）汇总：官方公开口径，三类归档，附有效期与领取条件 | 福利清单 |
 
 > 认证方式：统一用环境变量（如 `OPENROUTER_API_KEY`），脚本绝不打印、记录或落盘原始凭证。
 
