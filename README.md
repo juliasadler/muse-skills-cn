@@ -110,6 +110,12 @@ cp -r muse-skills-cn/skills/openrouter ~/.claude/skills/
 
 各 skill 的具体用法见其目录下的 `SKILL.md`，新 skill 可从 [template-skill](template-skill/) 模板起步。
 
+## 💬 交流群
+
+扫码加入 QQ 交流群，一起聊 Muse 玩法、AI 福利：
+
+![QQ 交流群](assets/qq-group.png)
+
 ## 🤝 投稿
 
 欢迎提交原创 skill 或改进现有内容，先读 [CONTRIBUTING.md](CONTRIBUTING.md)。
