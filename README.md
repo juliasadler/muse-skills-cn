@@ -1,5 +1,9 @@
 # Muse 中文 Skill 包：38 个生活场景技巧 + 11 个开箱即用的 Skill
 
+![GitHub stars](https://img.shields.io/github/stars/juliasadler/muse-skills-cn?style=social)
+![License](https://img.shields.io/github/license/juliasadler/muse-skills-cn)
+![Last commit](https://img.shields.io/github/last-commit/juliasadler/muse-skills-cn)
+
 > 内容形式参考 [jasonbitsmith/muse-skills](https://github.com/jasonbitsmith/muse-skills)（一句话痛点 + 三步做法），技巧全部原创，对应本仓库真实可用的 Skill。
 
 小羽（Muse）的专属 skill 包：**聚焦个人生活场景**，第一方原创，开箱可用。
