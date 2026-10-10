@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+"""OpenRouter CLI: verify your API key and dispatch chat / image completions.
+
+Auth: set the OPENROUTER_API_KEY environment variable.
+Get a key at https://openrouter.ai/keys
+
+    export OPENROUTER_API_KEY="sk-or-v1-..."
+
+No raw key is ever printed, logged, or persisted by this script.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+
+BASE = "https://openrouter.ai/api/v1"
+
+
+def _api_key() -> str:
+    key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    if not key:
+        raise SystemExit(
+            "OPENROUTER_API_KEY is not set. "
+            "Export it first: export OPENROUTER_API_KEY=\"sk-or-v1-...\""
+        )
+    return key
+
+
+def _read_json(resp) -> dict:
+    return json.loads(resp.read().decode("utf-8"))
+
+
+def _get(path: str) -> dict:
+    req = urllib.request.Request(f"{BASE}{path}", method="GET")
+    req.add_header("Accept", "application/json")
+    req.add_header("Authorization", f"Bearer {_api_key()}")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return _read_json(resp)
+    except urllib.error.HTTPError as exc:
+        try:
+            body = exc.read().decode("utf-8", errors="replace")
+        except Exception:
+            body = ""
+        raise SystemExit(f"HTTP {exc.code}: {body[:500]}") from exc
+
+
+def _post(path: str, payload: dict) -> dict:
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(f"{BASE}{path}", data=data, method="POST")
+    req.add_header("Content-Type", "application/json")
+    req.add_header("Accept", "application/json")
+    # NOTE: no HTTP-Referer / X-Title headers. They are optional attribution
+    # headers, but some free-tier providers have been observed returning
+    # empty content when they are present. Omit them for reliability.
+    req.add_header("Authorization", f"Bearer {_api_key()}")
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            return _read_json(resp)
+    except urllib.error.HTTPError as exc:
+        try:
+            body = exc.read().decode("utf-8", errors="replace")
+        except Exception:
+            body = ""
+        raise SystemExit(f"HTTP {exc.code}: {body[:500]}") from exc
+
+
+def cmd_check(_args: argparse.Namespace) -> None:
+    info = _get("/auth/key")
+    data = info.get("data", info)
+    print(json.dumps(data, ensure_ascii=False, indent=2))
+
+
+def cmd_chat(args: argparse.Namespace) -> None:
+    payload = {
+        "model": args.model,
+        "messages": [{"role": "user", "content": args.prompt}],
+        "max_tokens": args.max_tokens,
+    }
+    if args.provider:
+        payload["provider"] = {"order": [p.strip() for p in args.provider.split(",") if p.strip()]}
+    if args.quantizations:
+        payload.setdefault("provider", {})["quantizations"] = [
+            q.strip() for q in args.quantizations.split(",") if q.strip()
+        ]
+    resp = _post("/chat/completions", payload)
+    try:
+        choice = resp["choices"][0]["message"]["content"]
+    except (KeyError, IndexError):
+        choice = json.dumps(resp, ensure_ascii=False)[:2000]
+    usage = resp.get("usage", {})
+    print(choice)
+    print(f"\n[usage] model={resp.get('model')} "
+          f"prompt_tokens={usage.get('prompt_tokens')} "
+          f"completion_tokens={usage.get('completion_tokens')}")
+
+
+def cmd_image(args: argparse.Namespace) -> None:
+    import base64
+    import time
+
+    payload = {
+        "model": args.model,
+        "messages": [{"role": "user", "content": args.prompt}],
+        "modalities": [m.strip() for m in args.modalities.split(",") if m.strip()],
+    }
+    resp = _post("/chat/completions", payload)
+    try:
+        msg = resp["choices"][0]["message"]
+        images = msg.get("images", [])
+    except (KeyError, IndexError):
+        images = []
+    if not images:
+        raise SystemExit(
+            "No image returned: " + json.dumps(resp, ensure_ascii=False)[:500]
+        )
+    url = images[0]["image_url"]["url"]
+    header, _, b64 = url.partition(",")
+    ext = "png"
+    if "jpeg" in header or "jpg" in header:
+        ext = "jpg"
+    elif "webp" in header:
+        ext = "webp"
+    default_dir = os.path.expanduser("~/openrouter_images")
+    out = args.out or os.path.join(default_dir, f"img_{time.strftime('%Y%m%d_%H%M%S')}.{ext}")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "wb") as f:
+        f.write(base64.b64decode(b64))
+    usage = resp.get("usage", {})
+    print(out)
+    print(f"[usage] model={resp.get('model')} "
+          f"prompt_tokens={usage.get('prompt_tokens')} "
+          f"completion_tokens={usage.get('completion_tokens')}")
+
+
+def cmd_images(args: argparse.Namespace) -> None:
+    """Generate via POST /api/v1/images (for models that reject chat/completions)."""
+    import base64
+    import time
+
+    payload = {"model": args.model, "prompt": args.prompt}
+    if args.size:
+        payload["size"] = args.size
+    resp = _post("/images", payload)
+    try:
+        datum = resp["data"][0]
+    except (KeyError, IndexError):
+        raise SystemExit(
+            "No image returned: " + json.dumps(resp, ensure_ascii=False)[:500]
+        )
+    b64 = datum.get("b64_json", "") or ""
+    if b64.startswith("data:"):
+        b64 = b64.split(",", 1)[1]
+    if not b64 and datum.get("url"):
+        raise SystemExit("Provider returned URL only: " + datum["url"][:200])
+    default_dir = os.path.expanduser("~/openrouter_images")
+    out = args.out or os.path.join(default_dir, f"img_{time.strftime('%Y%m%d_%H%M%S')}.png")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "wb") as f:
+        f.write(base64.b64decode(b64))
+    print(out)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(prog="openrouter")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    sub.add_parser("check", help="Verify the API key (GET /auth/key, free).")
+
+    chat = sub.add_parser("chat", help="Dispatch one chat completion.")
+    chat.add_argument("--model", required=True, help="OpenRouter model slug.")
+    chat.add_argument("--prompt", required=True, help="User prompt text.")
+    chat.add_argument("--max-tokens", type=int, default=200)
+    chat.add_argument("--provider", default="",
+                      help="Pin provider(s), comma-separated, e.g. 'Anthropic,DeepInfra'.")
+    chat.add_argument("--quantizations", default="",
+                      help="Quantization filter, e.g. 'bf16,fp16'.")
+
+    img = sub.add_parser("image", help="Generate an image (saved to disk).")
+    img.add_argument("--model", required=True, help="Image-capable model slug.")
+    img.add_argument("--prompt", required=True, help="Image prompt text.")
+    img.add_argument("--out", default="",
+                     help="Output path (default: ~/openrouter_images/).")
+    img.add_argument("--modalities", default="image,text",
+                     help="Comma-separated modalities; use 'image' for image-only models.")
+
+    gen = sub.add_parser("images", help="Generate via POST /api/v1/images.")
+    gen.add_argument("--model", required=True,
+                     help="Model slug (for models that reject chat/completions).")
+    gen.add_argument("--prompt", required=True, help="Image prompt text.")
+    gen.add_argument("--out", default="",
+                     help="Output path (default: ~/openrouter_images/).")
+    gen.add_argument("--size", default="", help="Optional size, e.g. 1024x1024.")
+
+    args = parser.parse_args()
+    if args.cmd == "check":
+        cmd_check(args)
+    elif args.cmd == "chat":
+        cmd_chat(args)
+    elif args.cmd == "image":
+        cmd_image(args)
+    elif args.cmd == "images":
+        cmd_images(args)
+
+
+if __name__ == "__main__":
+    main()

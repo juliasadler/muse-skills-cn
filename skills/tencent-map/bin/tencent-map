@@ -1,0 +1,224 @@
+#!/usr/bin/env python3
+"""Tencent Maps (腾讯位置服务) WebService CLI.
+
+Auth: set the TENCENT_MAP_KEY environment variable with your WebService key.
+Create one at https://lbs.qq.com/ (QQ/WeChat sign-in, enable WebServiceAPI
+and allocate quota in the console).
+
+    export TENCENT_MAP_KEY="your-key-here"
+
+The key is attached as the `key` query param. No raw key is ever printed,
+logged, or persisted by this script.
+
+Endpoints (https://apis.map.qq.com):
+  check    -- verify the key with a cheap address-resolve call
+  geocode  -- address -> lat,lng        (GET /ws/geocoder/v1/?address=)
+  reverse  -- lat,lng -> address       (GET /ws/geocoder/v1/?location=)
+  search   -- POI keyword search        (GET /ws/place/v1/search)
+  distance -- straight/road distance   (POST /ws/distance/v1)
+  route    -- driving route plan       (GET /ws/direction/v1/driving)
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import urllib.error
+import urllib.parse
+import urllib.request
+
+BASE = "https://apis.map.qq.com"
+
+
+def _api_key() -> str:
+    key = os.environ.get("TENCENT_MAP_KEY", "").strip()
+    if not key:
+        raise SystemExit(
+            "TENCENT_MAP_KEY is not set. "
+            "Create a key at https://lbs.qq.com/ and export it first."
+        )
+    return key
+
+
+def _request(url: str, data: dict | None = None, timeout: int = 30) -> dict:
+    # Attach the key as the `key` query parameter.
+    parts = urllib.parse.urlparse(url)
+    qs = urllib.parse.parse_qsl(parts.query)
+    qs.append(("key", _api_key()))
+    url = urllib.parse.urlunparse(parts._replace(query=urllib.parse.urlencode(qs)))
+    body = json.dumps(data).encode("utf-8") if data is not None else None
+    req = urllib.request.Request(url, data=body, method="POST" if body else "GET")
+    if body:
+        req.add_header("Content-Type", "application/json")
+    req.add_header("Accept", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        try:
+            raw = exc.read().decode("utf-8", errors="replace")
+        except Exception:
+            raw = ""
+        raise SystemExit(f"HTTP {exc.code}: {raw[:500]}") from exc
+
+
+def _get(path: str, params: dict) -> dict:
+    qs = urllib.parse.urlencode(params, doseq=True)
+    return _request(f"{BASE}{path}?{qs}")
+
+
+def _ok(payload: dict) -> dict:
+    status = payload.get("status")
+    if status != 0:
+        raise SystemExit(
+            f"Tencent Maps error status={status} message={payload.get('message')}"
+        )
+    return payload
+
+
+def cmd_check(_args: argparse.Namespace) -> None:
+    payload = _ok(_get("/ws/geocoder/v1/", {"address": "天安门"}))
+    loc = payload["result"]["location"]
+    print(json.dumps({"ok": True, "location": loc}, ensure_ascii=False))
+
+
+def cmd_geocode(args: argparse.Namespace) -> None:
+    payload = _ok(_get("/ws/geocoder/v1/", {"address": args.address}))
+    result = payload["result"]
+    print(
+        json.dumps(
+            {
+                "address": result.get("address"),
+                "location": result.get("location"),
+                "ad_info": result.get("ad_info"),
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+
+
+def cmd_reverse(args: argparse.Namespace) -> None:
+    payload = _ok(_get("/ws/geocoder/v1/", {"location": args.location}))
+    result = payload["result"]
+    print(
+        json.dumps(
+            {
+                "address": result.get("address"),
+                "formatted_addresses": result.get("formatted_addresses"),
+                "ad_info": result.get("ad_info"),
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+
+
+def cmd_search(args: argparse.Namespace) -> None:
+    params = {"keyword": args.keyword, "page_size": args.page_size or 10}
+    if args.location:
+        radius = args.radius or 5000
+        params["boundary"] = f"nearby({args.location},{radius})"
+    elif args.region:
+        params["boundary"] = f"region({args.region},1)"
+    payload = _ok(_get("/ws/place/v1/search", params))
+    items = []
+    for d in payload.get("data", []) or []:
+        loc = d.get("location") or {}
+        items.append(
+            {
+                "id": d.get("id"),
+                "title": d.get("title"),
+                "address": d.get("address"),
+                "category": d.get("category"),
+                "tel": d.get("tel"),
+                "location": {"lat": loc.get("lat"), "lng": loc.get("lng")},
+            }
+        )
+    print(json.dumps(items, ensure_ascii=False, indent=2))
+
+
+def cmd_distance(args: argparse.Namespace) -> None:
+    payload = _ok(
+        _request(
+            f"{BASE}/ws/distance/v1/?mode={args.mode}",
+            {"from": args.from_, "to": args.to},
+        )
+    )
+    rows = []
+    for el in (payload.get("result") or {}).get("elements", []) or []:
+        rows.append(
+            {
+                "from": el.get("from"),
+                "to": el.get("to"),
+                "distance_m": el.get("distance"),
+                "duration_s": el.get("duration"),
+            }
+        )
+    print(json.dumps(rows, ensure_ascii=False, indent=2))
+
+
+def cmd_route(args: argparse.Namespace) -> None:
+    params = {"from": args.from_, "to": args.to, "policy": args.policy or "LEAST_TIME"}
+    payload = _ok(_get("/ws/direction/v1/driving/", params))
+    result = payload.get("result") or {}
+    routes = result.get("routes") or []
+    if not routes:
+        print(json.dumps({"routes": []}, ensure_ascii=False))
+        return
+    r = routes[0]
+    print(
+        json.dumps(
+            {
+                "distance_m": r.get("distance"),
+                "duration_min": round((r.get("duration") or 0) / 60, 1),
+                "taxi_fee": r.get("taxi_fee"),
+                "steps": len(r.get("steps") or []),
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(prog="tencent-map")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p = sub.add_parser("check", help="verify the API key")
+    p.set_defaults(func=cmd_check)
+
+    p = sub.add_parser("geocode", help="address -> coordinates")
+    p.add_argument("--address", required=True)
+    p.set_defaults(func=cmd_geocode)
+
+    p = sub.add_parser("reverse", help="coordinates -> address")
+    p.add_argument("--location", required=True, help='"lat,lng"')
+    p.set_defaults(func=cmd_reverse)
+
+    p = sub.add_parser("search", help="POI keyword search")
+    p.add_argument("--keyword", required=True)
+    p.add_argument("--location", help='"lat,lng" for nearby search')
+    p.add_argument("--radius", type=int, help="nearby radius in meters (default 5000)")
+    p.add_argument("--region", help="e.g. 北京市 (used when --location omitted)")
+    p.add_argument("--page-size", type=int)
+    p.set_defaults(func=cmd_search)
+
+    p = sub.add_parser("distance", help="distance matrix between points")
+    p.add_argument("--from", dest="from_", required=True, help='"lat,lng;lat,lng"')
+    p.add_argument("--to", dest="to", required=True, help='"lat,lng;lat,lng"')
+    p.add_argument("--mode", default="driving", choices=["driving", "walking", "bicycling"])
+    p.set_defaults(func=cmd_distance)
+
+    p = sub.add_parser("route", help="driving route plan")
+    p.add_argument("--from", dest="from_", required=True, help='"lat,lng"')
+    p.add_argument("--to", dest="to", required=True, help='"lat,lng"')
+    p.add_argument("--policy", default="LEAST_TIME")
+    p.set_defaults(func=cmd_route)
+
+    args = parser.parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()

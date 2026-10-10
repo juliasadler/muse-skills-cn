@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+"""Volcengine Ark CLI: verify your API key and dispatch chat completions.
+
+Auth: set the VOLCENGINE_ARK_API_KEY environment variable.
+Get a key at https://console.volcengine.com/ark
+
+    export VOLCENGINE_ARK_API_KEY="your-key-here"
+
+Note: calling a Doubao model requires creating an inference endpoint
+(推理接入点) in the console first; --model takes the endpoint ID
+(ep-xxxx), not the public model name.
+
+No raw key is ever printed, logged, or persisted by this script.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import urllib.error
+import urllib.request
+
+BASE = "https://ark.cn-beijing.volces.com/api/v3"
+
+
+def _api_key() -> str:
+    key = os.environ.get("VOLCENGINE_ARK_API_KEY", "").strip()
+    if not key:
+        raise SystemExit(
+            "VOLCENGINE_ARK_API_KEY is not set. "
+            "Get a key at https://console.volcengine.com/ark and export it first."
+        )
+    return key
+
+
+def _request(path: str, payload: dict | None = None) -> dict:
+    method = "POST" if payload is not None else "GET"
+    data = json.dumps(payload).encode("utf-8") if payload is not None else None
+    req = urllib.request.Request(f"{BASE}{path}", data=data, method=method)
+    req.add_header("Accept", "application/json")
+    if payload is not None:
+        req.add_header("Content-Type", "application/json")
+    req.add_header("Authorization", f"Bearer {_api_key()}")
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        try:
+            body = exc.read().decode("utf-8", errors="replace")
+        except Exception:
+            body = ""
+        raise SystemExit(f"HTTP {exc.code}: {body[:500]}") from exc
+
+
+def cmd_check(_args: argparse.Namespace) -> None:
+    """Verify the key: list available models (free, no token spend)."""
+    info = _request("/models")
+    models = info.get("data", info)
+    if isinstance(models, list):
+        print(f"ok: key valid, {len(models)} models available")
+        for m in models[:10]:
+            mid = m.get("id") if isinstance(m, dict) else m
+            print(f"  - {mid}")
+    else:
+        print(json.dumps(models, ensure_ascii=False, indent=2))
+
+
+def cmd_chat(args: argparse.Namespace) -> None:
+    """Dispatch one chat completion. --model takes the 推理接入点 ID (ep-xxxx)."""
+    payload = {
+        "model": args.model,
+        "messages": [{"role": "user", "content": args.prompt}],
+        "max_tokens": args.max_tokens,
+    }
+    out = _request("/chat/completions", payload)
+    try:
+        text = out["choices"][0]["message"]["content"]
+        print(text)
+    except (KeyError, IndexError, TypeError):
+        print(json.dumps(out, ensure_ascii=False, indent=2))
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(prog="ark")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    sub.add_parser("check", help="verify the API key: GET /api/v3/models (free)")
+
+    p_chat = sub.add_parser("chat", help="dispatch one chat completion")
+    p_chat.add_argument("--model", required=True, help="推理接入点 ID, e.g. ep-20260101-xxxx")
+    p_chat.add_argument("--prompt", required=True)
+    p_chat.add_argument("--max-tokens", type=int, default=512)
+
+    args = parser.parse_args()
+    if args.cmd == "check":
+        cmd_check(args)
+    elif args.cmd == "chat":
+        cmd_chat(args)
+
+
+if __name__ == "__main__":
+    main()
