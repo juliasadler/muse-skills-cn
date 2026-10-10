@@ -24,16 +24,8 @@ description: 把视频链接或音频文件转成带说话人区分的逐字稿�
 
 ### 1. 获取音频
 
-- **B 站**：网页接口有 412 风控，yt-dlp 直连失败时改走 `api.bilibili.com` 的 view/playurl 接口拿直链下载：
-  ```bash
-  # 先拿 aid/cid
-  # https://api.bilibili.com/x/web-interface/view?bvid=BVxxxx
-  # 再拿直链
-  # https://api.bilibili.com/x/player/playurl?avid=xxx&cid=xxx&qn=64
-  ```
-- **油管**：机房 IP 会被 bot 验证拦截（"Sign in to confirm you're not a bot"），需用户提供登录 cookies 后再下载。
-- **抖音**：需 fresh cookies；拿不到时请用户直接在 App 里保存视频发文件过来。
-- **本地音频/视频文件**：直接用。
+- **本地音频/视频文件**：直接用（推荐）；
+- **在线视频**：请先用常规方式拿到本地文件后再处理（如 yt-dlp 下载公开视频，或在 App 里保存）；平台要求登录验证的，请用户自行完成下载。
 
 ### 2. 抽音频（统一转 16kHz 单声道 wav）
 

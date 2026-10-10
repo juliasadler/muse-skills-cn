@@ -5,7 +5,7 @@ description: "SSH 被墙/只有 API token 时推送 GitHub：走 Git Database AP
 
 # GitHub 推送（Git Database API 直调）
 
-适用于：SSH 被出口代理掐断、只有 API token可用的环境。
+适用于：SSH 不可用、只有 API token 的环境。
 全程走 `https://api.github.com`，不依赖 git 协议。
 
 ## 铁律
