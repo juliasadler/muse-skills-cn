@@ -1,4 +1,4 @@
-# Muse 中文 Skill 包：38 个生活场景技巧 + 11 个开箱即用的 Skill
+# Muse 中文 Skill 包：44 个生活场景技巧 + 14 个开箱即用的 Skill
 
 ![GitHub stars](https://img.shields.io/github/stars/juliasadler/muse-skills-cn?style=social)
 ![License](https://img.shields.io/github/license/juliasadler/muse-skills-cn)
@@ -82,7 +82,19 @@
 37. **免费额度总过期浪费** → ① 按有效期排序，短的先薅 ② 新用户限期的别提前注册（注册即开始计时） ③ 到期前一周提醒自己用完
 38. **社媒看到的福利怕是假的** → ① 先按官方口径逐一核实 ② 对不上/找不到出处的标"存疑"不行动 ③ 已下线的进"避免白跑"区，不浪费时间
 
-## 📦 Skill 包（11 个）
+### ✅ 任务验收 · [task-acceptance-checklist](skills/task-acceptance-checklist/)
+
+39. **AI 交来的东西不敢直接用** → ① 逐条对照你的原始要求 ② 价格/日期等关键事实必须有出处 ③ 失败的步骤要明确告知，不说"已完成"
+40. **AI 说"查不到"你就信了** → ① 让它给出下一步建议（换关键词/换渠道） ② 分清"看到的"和"推测的" ③ 推测内容必须标明
+41. **长文里总藏着占位符** → ① 交付前通读全文 ② 清掉示例数据、待办标记 ③ 不确定的标"待确认"并说清找谁确认
+
+### 🔐 授权时机 · [authorization-timing](skills/authorization-timing/)
+
+42. **怕 AI 手滑花了钱/发出消息** → ① 花钱、对外发送、删数据、碰密码四类必须先问 ② 说清后果等你点头 ③ 查价格不等于可以买
+43. **每件事都问你很烦** → ① 只读操作（查资料/比价）可先做事后告知 ② 本地可逆的整理不用问 ③ 做完一句话说明结果在哪
+44. **拿不准该不该问** → ① 按最严处理：先问 ② "别问了直接办"也不覆盖花钱发消息这类 ③ 紧急情况先求助真人
+
+## 📦 Skill 包（14 个）
 
 | Skill | 说明 | 工具 |
 |---|---|---|
@@ -97,6 +109,8 @@
 | [email-triage](skills/email-triage/) | 邮箱分拣与定期清理：提醒/噪音/清理三类规则 | — |
 | [video-transcript](skills/video-transcript/) | 视频/音频转带说话人区分的逐字稿 | `scripts/diarize_transcribe.py` |
 | [ai-freebies](skills/ai-freebies/) | AI 福利（羊毛）汇总：官方公开口径，三类归档，附有效期与领取条件 | 福利清单 |
+| [task-acceptance-checklist](skills/task-acceptance-checklist/) | 任务验收清单：交付前的四步自检（需求对齐/事实核验/异常交代/疑点标注） | — |
+| [authorization-timing](skills/authorization-timing/) | 授权时机判断：何时必须先问用户、何时可自行决定并事后告知 | — |
 
 > 认证方式：统一用环境变量（如 `OPENROUTER_API_KEY`），脚本绝不打印、记录或落盘原始凭证。
 
