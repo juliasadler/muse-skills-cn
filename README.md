@@ -1,4 +1,4 @@
-# Muse 中文 Skill 包：44 个生活场景技巧 + 14 个开箱即用的 Skill
+# Muse 中文 Skill 包：59 个生活场景技巧 + 19 个开箱即用的 Skill
 
 ![GitHub stars](https://img.shields.io/github/stars/juliasadler/muse-skills-cn?style=social)
 ![License](https://img.shields.io/github/license/juliasadler/muse-skills-cn)
@@ -94,7 +94,37 @@
 43. **每件事都问你很烦** → ① 只读操作（查资料/比价）可先做事后告知 ② 本地可逆的整理不用问 ③ 做完一句话说明结果在哪
 44. **拿不准该不该问** → ① 按最严处理：先问 ② "别问了直接办"也不覆盖花钱发消息这类 ③ 紧急情况先求助真人
 
-## 📦 Skill 包（14 个）
+### 🔍 并行调研 · [multi-channel-parallel-research](skills/multi-channel-parallel-research/)
+
+45. **"调研XX"一开口就不知道从哪下手** → ① 先把模糊需求拆成独立子问题 ② 每个子问题匹配渠道：事实查网页、口碑看社媒、条款看官方 ③ 并行搜集、统一字段记录
+46. **网上说法互相打架** → ① 关键结论至少两个无关来源印证 ② 单源说法标"待确认"不列为定论 ③ 结论分"已证实/待确认"两档输出
+47. **调研做了半天交不出东西** → ① 开工先告诉用户已启动 ② 输出固定结构：目标、已证实、待确认、未覆盖、来源列表 ③ 查不到的如实记入未覆盖项
+
+### 🧳 订票订房 · [booking-pitfall-checklist](skills/booking-pitfall-checklist/)
+
+48. **订单总价和看到的不一样** → ① 确认展示价含不含税/服务费/行李额 ② 把"到手总价"写清 ③ 不只看裸价
+49. **退改时才发现不能取消** → ① 下单前看清取消时限和手续费 ② 不可取消的单独提醒 ③ 日期人数证件逐字核对
+50. **只让查价，AI 却去下单了** → ① "看看价格"就只查价 ② 下单前必须回到清单核对 ③ 支付后 24 小时内回官网二次确认订单状态
+
+### 🎯 目标跟进 · [personal-goal-breakdown](skills/personal-goal-breakdown/)
+
+51. **目标喊了半年还在原地** → ① 先写清"成功长什么样"：可观察、可衡量、有期限 ② 拆成 2–5 个阶段小目标 ③ 每个阶段预设复盘时间点
+52. **卡住了就想换目标** → ① 只调方法不换目标 ② 留意目标间冲突（时间/精力/金钱） ③ 到期判断：完成、延期还是调整
+53. **跟进变成打扰** → ① 按用户偏好的频率和方式跟进 ② 记录用户亲口承诺作为依据 ③ 完成后做一次复盘
+
+### 🧠 记忆管理 · [ai-memory-management](skills/ai-memory-management/)
+
+54. **AI 总记不住你的偏好** → ① 值得长期记的：稳定偏好、重要决定、关键事实 ② 一次性的只记当前会话 ③ 定期清理过时信息
+55. **想让 AI 忘掉某件事** → ① 先只读盘点：原位置、副本、能再生它的来源 ② 删除前说明删什么、影响什么，等你确认 ③ 清理后验证各处不再出现
+56. **删了又冒出来** → ① "忘掉"是全系统清理：笔记、提醒、自动化都可能留副本 ② 已分享给他人的内容如实告知删不掉 ③ 交接时用"那条信息"指代，不复制敏感内容
+
+### 📄 文档质检 · [deliverable-document-qa](skills/deliverable-document-qa/) · [table-data-verification](skills/table-data-verification/)
+
+57. **发出的文档总被挑出毛病** → ① 以读者身份通读成品 ② 标题、结论、数据三对齐 ③ 每个关键数字都能指出出处
+58. **表格一改就出错** → ① 合计用公式重算，不抄别人的数 ② 空值全表统一规则 ③ 异常值必须标注原因，不许静默放过
+59. **版式署名老是漏** → ① 品牌元素打勾：署名/日期/版本/水印 ② 占位符零容忍 ③ 对方指定的文件名版式照字面落实
+
+## 📦 Skill 包（19 个）
 
 | Skill | 说明 | 工具 |
 |---|---|---|
@@ -111,6 +141,12 @@
 | [ai-freebies](skills/ai-freebies/) | AI 福利（羊毛）汇总：官方公开口径，三类归档，附有效期与领取条件 | 福利清单 |
 | [task-acceptance-checklist](skills/task-acceptance-checklist/) | 任务验收清单：交付前的四步自检（需求对齐/事实核验/异常交代/疑点标注） | — |
 | [authorization-timing](skills/authorization-timing/) | 授权时机判断：何时必须先问用户、何时可自行决定并事后告知 | — |
+| [multi-channel-parallel-research](skills/multi-channel-parallel-research/) | 多渠道并行调研法：拆题、匹配渠道、并行搜集、交叉验证、分档输出 | — |
+| [booking-pitfall-checklist](skills/booking-pitfall-checklist/) | 订票订房避坑清单：价格/取消政策/日期人数核对，下单留凭证二次确认 | — |
+| [personal-goal-breakdown](skills/personal-goal-breakdown/) | 个人目标拆解与跟进：可衡量的阶段小目标、复盘点、卡住只调方法 | — |
+| [ai-memory-management](skills/ai-memory-management/) | AI 记忆管理：记什么、忘什么、清理前先确认 | — |
+| [deliverable-document-qa](skills/deliverable-document-qa/) | 交付文档质检：结构/数字出处/文字格式/品牌元素终检 | — |
+| [table-data-verification](skills/table-data-verification/) | 表格数据核对法：表头对齐、合计验算、空值异常标注、单位统一 | — |
 
 > 认证方式：统一用环境变量（如 `OPENROUTER_API_KEY`），脚本绝不打印、记录或落盘原始凭证。
 
