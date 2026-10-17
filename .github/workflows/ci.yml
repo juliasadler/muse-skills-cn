@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 检查基础文件
+        run: |
+          test -f README.md || (echo "README.md 缺失" && exit 1)
+          test -f LICENSE || (echo "LICENSE 缺失" && exit 1)
+          echo "基础文件检查通过"
+
+      - name: 检查 Markdown 链接
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --exclude-mail './**/*.md'
+          fail: false
